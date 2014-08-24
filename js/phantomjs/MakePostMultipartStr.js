@@ -1,6 +1,6 @@
 var MakePostStr = {
 	
-	_boundary: false,
+	boundary: false,
 	
 	MakeRandomStr: function(n) {
 		var text = '',
@@ -18,6 +18,12 @@ var MakePostStr = {
 		}
 		ret = ret.join('&');
 		return ret;
+	},
+	
+	GenerateBoundary: function() {
+		var boundary = '----' + this.MakeRandomStr(24);
+		this.boundary = boundary;
+		return boundary;
 	},
 	
 	/*
@@ -38,21 +44,21 @@ var MakePostStr = {
 	*/
 	
 	MakePostMultipartStr: function(a) {
-		if(!this._boundary) this._boundary = '----' + this.MakeRandomStr(24);
-		var ret = '--' + this._boundary + "\r\n";
+		if(!this.boundary) this.GenerateBoundary();
+		var ret = '';
 		for(i in a) {
 			var a1 = a[i];
 			if(a1.name && a1.filename && a1.contenttype && a1.content) {
+				ret += '--' + this.boundary + "\r\n";
 				ret += 'Content-Disposition: form-data; name="' + encodeURIComponent(a1.name) + '";' + 
 						' filename="' + encodeURIComponent(a1.filename) + '"' + "\r\n";
 				ret += 'Content-Type: ' + a1.contenttype + "\r\n\r\n";
 				ret += a1.content + "\r\n";
-				ret += '--' + this._boundary + "\r\n";
 			} else {
 				for(j in a1) {
+					ret += '--' + this.boundary + "\r\n";
 					ret += 'Content-Disposition: form-data; name="' + encodeURIComponent(j) + '"' + "\r\n\r\n";
 					ret += a1[j] + "\r\n";
-					ret += '--' + this._boundary + "\r\n";
 				}
 			}
 		}
@@ -60,38 +66,3 @@ var MakePostStr = {
 	}
 	
 };
-
-console.log('.MakeRandomStr:');
-console.log(MakePostStr.MakeRandomStr(20));
-
-console.log('');
-console.log(' * * * * *');
-console.log('');
-
-console.log('.MakePostStr:');
-console.log(MakePostStr.MakePostStr({
-	name1: 'val<1>',
-	name2: '"val/2\\'
-}));
-
-console.log('');
-console.log(' * * * * *');
-console.log('');
-
-console.log('.MakePostMultipartStr');
-console.log(MakePostStr.MakePostMultipartStr(
-	[
-		{
-			name1: 'val<1>',
-			name2: '"val/2\\'
-		},
-		{
-			name: 'file',
-			filename: 'file.txt',
-			contenttype: 'plain/text',
-			content: 'file content' + "\n" + 'one more line'
-		}
-	]
-));
-
-phantom.exit();
